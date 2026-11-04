@@ -1,0 +1,111 @@
+# LiteLLM proxy exposing Vertex AI Claude as an OpenAI-compatible API.
+#
+# Create the secrets before applying (see README.md), then:
+#   kubectl apply -f k8s/litellm-k8s.yaml
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: litellm
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litellm-config
+  namespace: litellm
+data:
+  config.yaml: |
+    model_list:
+      - model_name: claude-opus-5-5
+        litellm_params:
+          model: vertex_ai/claude-opus-5-5
+          vertex_project: <your-gcp-project-id>
+          vertex_location: <your-vertex-region>
+      - model_name: claude-haiku-4-5
+        litellm_params:
+          model: vertex_ai/claude-haiku-4-5@20251001
+          vertex_project: <your-gcp-project-id>
+          vertex_location: <your-vertex-region>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm
+  namespace: litellm
+  labels:
+    app: litellm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: litellm
+  template:
+    metadata:
+      labels:
+        app: litellm
+    spec:
+      containers:
+        - name: litellm
+          image: ghcr.io/berriai/litellm:main-stable
+          args: ["--config", "/app/config.yaml", "--port", "4000"]
+          ports:
+            - name: http
+              containerPort: 4000
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /creds/adc.json
+            - name: LITELLM_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: litellm-master-key
+                  key: LITELLM_MASTER_KEY
+          volumeMounts:
+            - name: config
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+              readOnly: true
+            - name: gcp-creds
+              mountPath: /creds
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/liveliness
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+      volumes:
+        - name: config
+          configMap:
+            name: litellm-config
+        - name: gcp-creds
+          secret:
+            secretName: gcp-creds
+            # Fail pod startup if the secret doesn't contain adc.json
+            items:
+              - key: adc.json
+                path: adc.json
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: litellm
+  namespace: litellm
+spec:
+  selector:
+    app: litellm
+  ports:
+    - name: http
+      port: 4000
+      targetPort: http

@@ -1,0 +1,11 @@
+model_list:
+  - model_name: claude-opus-5-5
+    litellm_params:
+      model: vertex_ai/claude-opus-5-5
+      vertex_project: <your-gcp-project-id>
+      vertex_location: <your-vertex-region>
+  - model_name: claude-haiku-4-5
+    litellm_params:
+      model: vertex_ai/claude-haiku-4-5@20251001
+      vertex_project: <your-gcp-project-id>
+      vertex_location: <your-vertex-region>

@@ -1,0 +1,7 @@
+# Never commit credentials or keys
+.env
+*.env
+k8s/secrets.yaml
+*credentials*.json
+adc.json
+*-key.json
