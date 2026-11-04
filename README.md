@@ -1,6 +1,7 @@
 # litellminstall
 
 Run [LiteLLM](https://github.com/BerriAI/litellm) as a proxy in front of **Claude on Google Vertex AI**, so tools that speak the OpenAI API (such as [Open WebUI](https://github.com/open-webui/open-webui)) can use it with a plain URL and API key.
+Note: please make sure you go into google(model garden) and accept the agreement for each model you plan to use.  If you don't and you add a model below, it will fail when making the call to vertex. 
 
 ## Why a proxy?
 
