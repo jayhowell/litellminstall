@@ -67,7 +67,11 @@ kubectl apply -f <dir>/litellm-k8s.yaml
    ```
    The `ls` output should list `adc.json`. If it doesn't, see [Troubleshooting](#troubleshooting).
 
-   Then use `http://litellm.litellm.svc.cluster.local:4000/v1` as the URL (see [Connecting Open WebUI](#connecting-open-webui)).
+5. URL for the LiteLLM service, as configured by the deployment. **Do not leave `/v1` off the end; it's required.**
+   ```
+   http://litellm.litellm.svc.cluster.local:4000/v1
+   ```
+   This address works from inside the cluster. For other setups, see [URL to use](#url-to-use) and [Connecting Open WebUI](#connecting-open-webui).
 
 The sections below explain each step in detail.
 
@@ -225,7 +229,7 @@ curl -s http://localhost:4000/v1/models -H "Authorization: Bearer $LITELLM_MASTE
 ## Connecting Open WebUI
 
 1. Go to **Admin Panel → Settings → Connections → OpenAI API → +**.
-2. **URL:** the URL from the table for your setup. It must end in `/v1`.
+2. **URL:** the URL from the table for your setup. In-cluster, that is `http://litellm.litellm.svc.cluster.local:4000/v1`. **The `/v1` is required; without it Open WebUI finds no models.**
 3. **Key:** your LiteLLM master key.
    - **Kubernetes:**
      ```bash
